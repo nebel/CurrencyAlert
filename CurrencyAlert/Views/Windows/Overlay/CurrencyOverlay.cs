@@ -14,6 +14,8 @@ namespace CurrencyAlert.Views.Windows.Overlay;
 
 public class CurrencyOverlay : Window
 {
+    private const long CacheTimeMs = 2950;
+
     private readonly List<TrackedCurrency> previewCurrencies = new() {
         new TrackedCurrency { Type = CurrencyType.Item, ItemId = 28, Threshold = 1400 }, // Poetics
         new TrackedCurrency { Type = CurrencyType.NonLimitedTomestone, Threshold = 1400 }, // NonLimitedTomestone
@@ -27,6 +29,22 @@ public class CurrencyOverlay : Window
     private static float LineHeight => 24.0f * ImGuiHelpers.GlobalScale + ImGui.GetStyle().ItemSpacing.Y;
     private static float IconSize => 24.0f * ImGuiHelpers.GlobalScale;
     private IEnumerable<TrackedCurrency> Currencies => CurrencyAlertSystem.Config is { RepositionMode: true } ? previewCurrencies : CurrencyAlertSystem.Config.Currencies;
+
+    private long updateTicks;
+    private TrackedCurrency[] cached;
+    private TrackedCurrency[] GetActiveCurrenciesCached()
+    {
+        var ticks = System.Environment.TickCount64;
+        if (ticks - updateTicks > CacheTimeMs) {
+            cached = GetActiveCurrencies(Currencies).ToArray();
+            updateTicks = ticks;
+            return cached;
+        }
+
+        return cached;
+    }
+
+    internal void ClearCache() => updateTicks = 0;
     
     private float windowWidth;
     private float windowHeight;
@@ -58,10 +76,13 @@ public class CurrencyOverlay : Window
     public override void Draw()
     {
         if (CurrencyAlertSystem.Config is { OverlayIcon: false, OverlayText: false }) return;
-        
-        windowWidth = CalculateWidth(Currencies);
-        windowHeight = CalculateHeight(Currencies);
-        
+
+        var activeCurrencies = GetActiveCurrenciesCached();
+        if (activeCurrencies.Length == 0) return;
+
+        windowWidth = CalculateWidth(activeCurrencies);
+        windowHeight = CalculateHeight(activeCurrencies);
+
         if (CurrencyAlertSystem.Config.GrowUp)
         {
             workingPosition = CurrencyAlertSystem.Config.OverlayDrawPosition + new Vector2(0.0f, windowHeight);
@@ -71,7 +92,7 @@ public class CurrencyOverlay : Window
             workingPosition = CurrencyAlertSystem.Config.OverlayDrawPosition;
         }
         
-        if (CurrencyAlertSystem.Config.ShowBackground && GetActiveCurrencies(Currencies).Any())
+        if (CurrencyAlertSystem.Config.ShowBackground && GetActiveCurrenciesCached().Length > 0)
         {
             ImGui.GetBackgroundDrawList().AddRectFilled(
                 CurrencyAlertSystem.Config.OverlayDrawPosition - ImGuiHelpers.ScaledVector2(5.0f), 
@@ -122,7 +143,7 @@ public class CurrencyOverlay : Window
             ImGui.End();
         }
         
-        DrawCurrencyList(Currencies);
+        DrawCurrencyList(activeCurrencies);
         
         // Debug Location Info, draws dots around what I consider to be the "window"
         // ImGui.GetBackgroundDrawList().AddCircleFilled(CurrencyAlertSystem.Config.OverlayDrawPosition, 5.0f, ImGui.GetColorU32(KnownColor.Orange.Vector()));
@@ -135,15 +156,12 @@ public class CurrencyOverlay : Window
     {
         foreach (var currency in currencies)
         {
-            if (currency is { ShowInOverlay: true, Enabled: true } && currency.CurrentCount > currency.Threshold || CurrencyAlertSystem.Config.RepositionMode)
-            {
-                if (CurrencyAlertSystem.Config.GrowUp) workingPosition.Y -= LineHeight;
+            if (CurrencyAlertSystem.Config.GrowUp) workingPosition.Y -= LineHeight;
 
-                ImGui.SetCursorScreenPos(workingPosition);
-                DrawCurrency(currency);
+            ImGui.SetCursorScreenPos(workingPosition);
+            DrawCurrency(currency);
 
-                if (!CurrencyAlertSystem.Config.GrowUp) workingPosition.Y += LineHeight;
-            }
+            if (!CurrencyAlertSystem.Config.GrowUp) workingPosition.Y += LineHeight;
         }
     }
     
@@ -208,16 +226,16 @@ public class CurrencyOverlay : Window
     }
 
     private static float CalculateHeight(IEnumerable<TrackedCurrency> currencies)
-        => GetActiveCurrencies(currencies).Count() * (IconSize * ImGuiHelpers.GlobalScale + ImGui.GetStyle().ItemSpacing.Y);
+        => currencies.Count() * (IconSize * ImGuiHelpers.GlobalScale + ImGui.GetStyle().ItemSpacing.Y);
 
-    private float CalculateWidth(IEnumerable<TrackedCurrency> currencies) 
+    private float CalculateWidth(IEnumerable<TrackedCurrency> currencies)
         => GetCurrencyWidths(currencies).Prepend(0.0f).Max();
 
     private IEnumerable<float> GetCurrencyWidths(IEnumerable<TrackedCurrency> currencies)
-        => GetActiveCurrencies(currencies).Select(GetLineWidth);
+        => currencies.Select(GetLineWidth);
     
     private static IEnumerable<TrackedCurrency> GetActiveCurrencies(IEnumerable<TrackedCurrency> currencies)
-        => currencies.Where(currency => currency.CurrentCount > currency.Threshold && currency.ShowInOverlay || CurrencyAlertSystem.Config.RepositionMode);
+        => currencies.Where(currency => currency.CurrentCount > currency.Threshold && currency is { ShowInOverlay: true, Enabled: true } || CurrencyAlertSystem.Config.RepositionMode);
 
     private float GetLineWidth(TrackedCurrency currency) => CurrencyAlertSystem.Config switch
     {

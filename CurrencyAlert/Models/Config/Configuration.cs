@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Numerics;
+using CurrencyAlert.Views.Windows.Overlay;
 using Dalamud.Configuration;
 using Dalamud.Interface;
+using KamiLib;
 using Newtonsoft.Json;
 
 namespace CurrencyAlert.Models.Config;
@@ -29,5 +31,9 @@ public class Configuration : IPluginConfiguration
     [JsonIgnore] public bool RepositionMode = false;
     [JsonIgnore] public bool WindowPosChanged = false;
     
-    public void Save() => Service.PluginInterface.SavePluginConfig(this);
+    public void Save()
+    {
+        KamiCommon.WindowManager.GetWindowOfType<CurrencyOverlay>()?.ClearCache();
+        Service.PluginInterface.SavePluginConfig(this);
+    }
 }
