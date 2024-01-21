@@ -4,11 +4,20 @@ using System.Linq;
 using CurrencyAlert.Models;
 using CurrencyAlert.Models.Config;
 using CurrencyAlert.Models.Enums;
+using Dalamud.Game.Inventory.InventoryEventArgTypes;
+using Dalamud.Hooking;
+using FFXIVClientStructs.FFXIV.Client.Game;
 
 namespace CurrencyAlert.Controllers;
 
 public class CurrencyAlertSystem : IDisposable {
     public static Configuration Config = null!;
+
+    private bool checkWarnings = true;
+    private List<TrackedCurrency> warnings = new();
+
+    private delegate void SetItemDataDelegate(sbyte specialId, uint itemId, uint maxCount, uint count, bool isUnlimited);
+    private readonly Hook<SetItemDataDelegate>? setItemDataHook;
 
     public CurrencyAlertSystem() {
         Config = Service.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
@@ -22,10 +31,16 @@ public class CurrencyAlertSystem : IDisposable {
         }
         
         Service.ClientState.TerritoryChanged += OnZoneChange;
+        Service.GameInventory.InventoryChanged += OnInventoryChanged;
+
+        setItemDataHook ??= Service.Hooker.HookFromAddress<SetItemDataDelegate>((nint)CurrencyManager.Addresses.SetItemData.Value, OnSetItemData);
+        setItemDataHook?.Enable();
     }
 
     public void Dispose() {
         Service.ClientState.TerritoryChanged -= OnZoneChange;
+        Service.GameInventory.InventoryChanged -= OnInventoryChanged;
+        setItemDataHook?.Dispose();
     }
     
     private void OnZoneChange(ushort e) {
@@ -34,6 +49,34 @@ public class CurrencyAlertSystem : IDisposable {
         foreach (var currency in Config.Currencies.Where(currency => currency is { HasWarning: true, ChatWarning: true, Enabled: true })) {
             Service.ChatGui.Print($"{currency.Name} is {(currency.Invert ? "below" : "above")} threshold.", "CurrencyAlert", 43);
         }
+    }
+
+    private void OnInventoryChanged(IReadOnlyCollection<InventoryEventArgs> events)
+    {
+        Service.Log.Debug("Invalidating warning cache (OnInventoryChanged)");
+        checkWarnings = true;
+    }
+
+    private void OnSetItemData(sbyte specialId, uint itemId, uint maxCount, uint count, bool isUnlimited)
+    {
+        Service.Log.Debug("Invalidating warning cache (OnSetItemData)");
+        checkWarnings = true;
+    }
+
+    public void InvalidateCache()
+    {
+        Service.Log.Debug("Invalidating warning cache (forced)");
+        checkWarnings = true;
+    }
+
+    public List<TrackedCurrency> GetCachedWarnings()
+    {
+        if (checkWarnings) {
+            warnings = Config.Currencies.Where(currency => currency is { HasWarning: true }).ToList();
+            checkWarnings = false;
+        }
+
+        return warnings;
     }
 
     private static List<TrackedCurrency> GenerateInitialList() => new() {

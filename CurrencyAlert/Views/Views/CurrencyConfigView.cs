@@ -100,6 +100,7 @@ public class CurrencyConfigView {
         
         if (ImGui.Checkbox($"Invert##{itemId}", ref invert)) {
             currency.Invert = invert;
+            CurrencyAlertPlugin.System.InvalidateCache();
             CurrencyAlertSystem.Config.Save();
         }
         ImGuiComponents.HelpMarker("Warn when below the threshold instead of above");
@@ -109,6 +110,7 @@ public class CurrencyConfigView {
         ImGui.PushItemWidth(50.0f * ImGuiHelpers.GlobalScale);
         if (ImGui.InputInt($"Threshold##{itemId}", ref threshold, 0, 0)) {
             currency.Threshold = threshold;
+            CurrencyAlertPlugin.System.InvalidateCache();
             CurrencyAlertSystem.Config.Save();
         }
         
