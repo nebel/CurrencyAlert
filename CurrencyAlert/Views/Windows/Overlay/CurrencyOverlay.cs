@@ -94,7 +94,7 @@ public class CurrencyOverlay : Window {
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + 3.0f * ImGuiHelpers.GlobalScale);
         }
         
-        if (textEnabled && !iconEnabled) {
+        if (textEnabled && !iconEnabled && !CurrencyAlertSystem.Config.SingleLine) {
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + 3.0f * ImGuiHelpers.GlobalScale);
         }
         
