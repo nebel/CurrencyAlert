@@ -24,7 +24,7 @@ public class CurrencyOverlay : Window {
     };
 
     private static float IconSize => 24.0f * ImGuiHelpers.GlobalScale;
-    private List<TrackedCurrency> Currencies => CurrencyAlertSystem.Config is { RepositionMode: true } ? previewCurrencies : CurrencyAlertPlugin.System.GetCachedWarnings();
+    private List<TrackedCurrency> Currencies => CurrencyAlertSystem.Config is { RepositionMode: true } ? previewCurrencies : CurrencyAlertSystem.Config.Currencies;
     
     public CurrencyOverlay() : base("CurrencyAlert - Overlay Window") {
         Flags |= ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar;
@@ -55,8 +55,10 @@ public class CurrencyOverlay : Window {
             CurrencyAlertSystem.Config.OverlayDrawPosition = ImGui.GetWindowPos();
         }
         
-        foreach (var currency in Currencies.Where(currency => currency is { ShowInOverlay: true, Enabled: true } || CurrencyAlertSystem.Config.RepositionMode)) {
-            DrawCurrency(currency);
+        foreach (var currency in Currencies) {
+            if (currency is { ShowInOverlay: true, Enabled: true, HasWarning: true } || CurrencyAlertSystem.Config.RepositionMode) {
+                DrawCurrency(currency);
+            }
         }
 
         if (CurrencyAlertSystem.Config.RepositionMode) {
@@ -80,7 +82,7 @@ public class CurrencyOverlay : Window {
         var iconEnabled = CurrencyAlertSystem.Config is { OverlayIcon: true };
         var textEnabled = CurrencyAlertSystem.Config is { OverlayText: true };
         var longTextLabel = CurrencyAlertSystem.Config is { OverlayLongText: true };
-        var text = GetLabelForCurrency(currency, longTextLabel);
+        var text = GetLabelForCurrency(currency, longTextLabel) + "   " + currency.CurrentCount + "/" + currency.MaxCount;
         var textColor = CurrencyAlertSystem.Config.OverlayTextColor;
         
         if (iconEnabled) {
@@ -109,5 +111,5 @@ public class CurrencyOverlay : Window {
         => longLabel ? $"{currency.Name} is {(currency.Invert ? "below" : "above")} threshold" : $"{currency.Name}";
 
     private static bool HasActiveWarnings(IEnumerable<TrackedCurrency> currencies)
-        => currencies.Any(currency => currency is { Enabled: true, ShowInOverlay: true});
+        => currencies.Any(currency => currency is { HasWarning: true, Enabled: true, ShowInOverlay: true});
 }

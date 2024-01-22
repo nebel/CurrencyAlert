@@ -6,6 +6,7 @@ using CurrencyAlert.Models;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using ImGuiNET;
 
 namespace CurrencyAlert.Views.Views;
@@ -18,6 +19,7 @@ public class CurrencyConfigView {
     }
 
     public void Draw() {
+        currency.Refresh();
         DrawHeaderAndWatermark();
         DrawCurrentStatus();
         DrawSettings();
@@ -100,7 +102,7 @@ public class CurrencyConfigView {
         
         if (ImGui.Checkbox($"Invert##{itemId}", ref invert)) {
             currency.Invert = invert;
-            CurrencyAlertPlugin.System.InvalidateCache();
+            currency.Refresh();
             CurrencyAlertSystem.Config.Save();
         }
         ImGuiComponents.HelpMarker("Warn when below the threshold instead of above");
@@ -110,8 +112,13 @@ public class CurrencyConfigView {
         ImGui.PushItemWidth(50.0f * ImGuiHelpers.GlobalScale);
         if (ImGui.InputInt($"Threshold##{itemId}", ref threshold, 0, 0)) {
             currency.Threshold = threshold;
-            CurrencyAlertPlugin.System.InvalidateCache();
+            currency.Refresh();
             CurrencyAlertSystem.Config.Save();
+        }
+
+        if (currency.MaxCount != 0) {
+            ImGui.SameLine();
+            ImGui.TextUnformatted($" (max {currency.MaxCount})");
         }
         
         ImGui.SetCursorPosY(ImGui.GetContentRegionMax().Y - 23.0f * ImGuiHelpers.GlobalScale);
