@@ -5,6 +5,7 @@ using System.Numerics;
 using CurrencyAlert.Controllers;
 using CurrencyAlert.Models;
 using CurrencyAlert.Models.Enums;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
@@ -27,7 +28,7 @@ public class CurrencyOverlay : Window {
     private List<TrackedCurrency> Currencies => CurrencyAlertSystem.Config is { RepositionMode: true } ? previewCurrencies : CurrencyAlertSystem.Config.Currencies;
     
     public CurrencyOverlay() : base("CurrencyAlert - Overlay Window") {
-        Flags |= ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar;
+        Flags |= ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoFocusOnAppearing;
 
         ForceMainWindow = true;
     }
@@ -35,7 +36,19 @@ public class CurrencyOverlay : Window {
     public override void PreOpenCheck() 
         => IsOpen = CurrencyAlertSystem.Config.OverlayEnabled && 
                     (HasActiveWarnings(Currencies) || CurrencyAlertSystem.Config.RepositionMode) && 
-                    Service.ClientState.IsLoggedIn;
+                    Service.ClientState.IsLoggedIn &&
+                    !HiddenByCondition();
+
+    private bool HiddenByCondition()
+    {
+        var condition = Service.Condition;
+        return condition[ConditionFlag.OccupiedInCutSceneEvent]
+               || condition[ConditionFlag.WatchingCutscene78] // Used in Dalamud's cutscene check
+               || condition[ConditionFlag.BoundByDuty]
+               || condition[ConditionFlag.BoundByDuty95] // GATE: Air Force One
+               || condition[ConditionFlag.BetweenAreas]
+               || condition[ConditionFlag.BetweenAreas51];
+    }
 
     public override void PreDraw() {
         Flags |= ImGuiWindowFlags.NoMove;
@@ -84,6 +97,9 @@ public class CurrencyOverlay : Window {
         var longTextLabel = CurrencyAlertSystem.Config is { OverlayLongText: true };
         var text = GetLabelForCurrency(currency, longTextLabel) + "   " + currency.CurrentCount + "/" + currency.MaxCount;
         var textColor = CurrencyAlertSystem.Config.OverlayTextColor;
+        if (currency.CurrentCount == currency.MaxCount) {
+            textColor = new Vector4(1.0f, 0.3f, 0.5f, 1f);
+        }
         
         if (iconEnabled) {
             ImGui.Image(icon.ImGuiHandle, new Vector2(IconSize));

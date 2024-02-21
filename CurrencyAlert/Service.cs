@@ -10,6 +10,7 @@ public class Service {
     [PluginService] public static IDataManager DataManager { get; set; } = null!;
     [PluginService] public static IGameInventory GameInventory { get; set; } = null!;
     [PluginService] public static IGameInteropProvider Hooker { get; set; } = null!;
+    [PluginService] public static ICondition Condition { get; set; } = null!;
     [PluginService] public static ITextureProvider TextureProvider { get; set; } = null!;
     [PluginService] public static IChatGui ChatGui { get; set; } = null!;
     [PluginService] public static IPluginLog Log { get; set; } = null!;
