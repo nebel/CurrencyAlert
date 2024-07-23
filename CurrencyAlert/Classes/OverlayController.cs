@@ -76,8 +76,8 @@ public unsafe class OverlayController() : NativeUiOverlayController(Service.Addo
             overlayNode.Currency = activeWarnings[index];
             overlayNode.IsVisible = true;
             overlayNode.Refresh();
-            overlayListNode.RecalculateLayout();
         }
+        overlayListNode.RecalculateLayout();
     }
 
     public void Refresh() {
