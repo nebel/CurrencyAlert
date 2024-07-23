@@ -14,4 +14,5 @@ public static class System {
     public static OverlayController OverlayController { get; set; }
     public static ConfigurationWindow ConfigurationWindow { get; set; }
     public static NativeController NativeController { get; set; }
+    public static InventoryWatcher InventoryWatcher { get; set; }
 }

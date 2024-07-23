@@ -35,5 +35,8 @@ public class Configuration : IPluginConfiguration {
         => Service.PluginInterface.LoadConfigFile("CurrencyAlert.config.json", () => new Configuration());
 
     public void Save()
-        => Service.PluginInterface.SaveConfigFile("CurrencyAlert.config.json", this);
+    {
+        System.InventoryWatcher.Invalidate();
+        Service.PluginInterface.SaveConfigFile("CurrencyAlert.config.json", this);
+    }
 }

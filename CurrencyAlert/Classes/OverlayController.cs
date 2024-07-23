@@ -13,6 +13,7 @@ namespace CurrencyAlert.Classes;
 
 public unsafe class OverlayController() : NativeUiOverlayController(Service.AddonLifecycle, Service.Framework, Service.GameGui) {
     private ListNode<CurrencyWarningNode>? overlayListNode;
+    private ulong cacheVersion;
 
     private static AddonNamePlate* AddonNamePlate => (AddonNamePlate*) Service.GameGui.GetAddonByName("NamePlate");
 
@@ -65,6 +66,11 @@ public unsafe class OverlayController() : NativeUiOverlayController(Service.Addo
         // Nothing to load
     }
 
+    public void ClearCache()
+    {
+        cacheVersion = 0;
+    }
+
     public void Update() {
         if (overlayListNode is null) return;
 
@@ -73,6 +79,11 @@ public unsafe class OverlayController() : NativeUiOverlayController(Service.Addo
             true when !Service.Condition.IsBoundByDuty() => true,
             _ => System.Config.OverlayEnabled,
         };
+
+        if (cacheVersion == System.InventoryWatcher.Version) {
+            return;
+        }
+        cacheVersion = System.InventoryWatcher.Version;
 
         foreach (var bannerOverlayNode in overlayListNode) {
             bannerOverlayNode.IsVisible = false;
