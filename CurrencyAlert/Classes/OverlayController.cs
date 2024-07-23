@@ -7,10 +7,13 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using KamiLib.Extensions;
 using KamiToolKit;
 using KamiToolKit.Classes;
+using KamiToolKit.Nodes;
 
 namespace CurrencyAlert.Classes;
 
 public unsafe class OverlayController : NameplateAddonController {
+    private ListNode<CurrencyWarningNode>? overlayListNode;
+    private ulong cacheVersion;
 
     public OverlayListNode? OverlayListNode;
 
@@ -59,6 +62,11 @@ public unsafe class OverlayController : NameplateAddonController {
             true when !Service.Condition.IsBoundByDuty() => true,
             _ => OverlayListNode.IsVisible,
         };
+
+        if (cacheVersion == System.InventoryWatcher.Version) {
+            return;
+        }
+        cacheVersion = System.InventoryWatcher.Version;
 
         var activeWarnings = System.Config.Currencies
             .Where(currency => currency is { HasWarning: true, Enabled: true, ShowInOverlay: true })

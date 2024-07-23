@@ -31,6 +31,8 @@ public sealed class CurrencyAlertPlugin : IDalamudPlugin {
         System.ConfigurationWindow = new ConfigurationWindow();
         System.WindowManager.AddWindow(System.ConfigurationWindow, WindowFlags.IsConfigWindow | WindowFlags.RequireLoggedIn);
 
+        System.InventoryWatcher = new InventoryWatcher();
+
         System.OverlayController = new OverlayController();
 
         Service.ClientState.TerritoryChanged += OnZoneChange;
@@ -43,6 +45,7 @@ public sealed class CurrencyAlertPlugin : IDalamudPlugin {
 
         System.CommandManager.Dispose();
         System.WindowManager.Dispose();
+        System.InventoryWatcher.Dispose();
         System.OverlayController.Dispose();
         System.NativeController.Dispose();
     }

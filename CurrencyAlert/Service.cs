@@ -14,4 +14,6 @@ public class Service {
     [PluginService] public static IPluginLog Log { get; set; }
     [PluginService] public static IFramework Framework { get; set; }
     [PluginService] public static ICondition Condition { get; set; }
+    [PluginService] public static IGameInventory GameInventory { get; set; }
+    [PluginService] public static IGameInteropProvider GameInterop { get; set; }
 }
