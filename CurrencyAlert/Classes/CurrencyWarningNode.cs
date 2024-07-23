@@ -153,10 +153,12 @@ public class CurrencyWarningNode : NodeBase<AtkResNode> {
         background.Width = width + 10.0f;
 
         IconId = Currency.IconId;
-        WarningText = Currency.ShowItemName ? $"{Currency.Name} {Currency.OverlayWarningText}" : $"{Currency.OverlayWarningText}";
+        if (ShowText) {
+            WarningText = Currency.ShowItemName ? $"{Currency.Name} {Currency.OverlayWarningText}" : $"{Currency.OverlayWarningText}";
 
-        if (System.Config.OverlayItemCount) {
-            itemCountText.SetNumber(Currency.CurrentCount);
+            if (System.Config.OverlayItemCount) {
+                itemCountText.SetNumber(Currency.CurrentCount);
+            }
         }
     }
 }
