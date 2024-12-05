@@ -89,7 +89,9 @@ public class CurrencyWarningNode : NodeBase<AtkResNode> {
         NodeFlags |= NodeFlags.EmitsEvents | NodeFlags.HasCollision | NodeFlags.RespondToMouse;
         
         IconId = Currency.IconId;
-        WarningText = Currency.ShowItemName ? $"{Currency.Name} {Currency.WarningText}" : $"{Currency.WarningText}";
+        if (System.Config.CurrencyNodeStyle.WarningTextStyle.IsVisible) {
+            WarningText = Currency.ShowItemName ? $"{Currency.Name} {Currency.WarningText}" : $"{Currency.WarningText}";
+        }
 
         var width = Margin.Left + Margin.Right;
 
