@@ -26,10 +26,9 @@ public class OverlayListNode : SimpleComponentNode {
 			FirstItemSpacing = 10.0f,
 			ItemSpacing = 10.0f,
 			ClipListContents = true,
-			Tooltip = "Overlay from CurrencyAlert plugin",
 		};
 
-		listNode.AddEvent(AddonEventType.MouseClick, OpenConfigurationWindow);
+		// listNode.AddEvent(AddonEventType.MouseClick, OpenConfigurationWindow);
 		
 		System.NativeController.AttachNode(listNode, this);
 	}
@@ -107,11 +106,10 @@ public class OverlayListNode : SimpleComponentNode {
 				Currency = newWarning,
 				IsVisible = true,
 				EnableEventFlags = true,
-				Tooltip = "Overlay from CurrencyAlert plugin",
 			};
 			
 			newWarningNode.Load(CurrencyNodeConfigPath);
-			newWarningNode.AddEvent(AddonEventType.MouseClick, OpenConfigurationWindow);
+			// newWarningNode.AddEvent(AddonEventType.MouseClick, OpenConfigurationWindow);
 			
 			listNode.AddNode(newWarningNode);
 			NodeList.Add(newWarningNode);
